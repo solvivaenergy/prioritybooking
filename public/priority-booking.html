@@ -469,7 +469,7 @@
       loadingOverlay.classList.add('active');
 
       try {
-        const response = await fetch('/api/submit-tc', {
+        const response = await fetch('/prioritybooking/api/submit-tc', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -7,7 +7,7 @@ const path = require("path");
 const app = express();
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use("/prioritybooking", express.static(path.join(__dirname, "public")));
 
 const {
   PAYMONGO_SECRET_KEY,
@@ -76,7 +76,7 @@ async function odooExecute(model, method, args, kwargs = {}) {
 // ─── Routes ───────────────────────────────────────────────
 
 // Serve T&C page — validates lead_id + token
-app.get("/priority-booking", async (req, res) => {
+app.get("/prioritybooking", async (req, res) => {
   const { lead_id, token } = req.query;
 
   if (!lead_id || !token) {
@@ -122,7 +122,7 @@ app.get("/priority-booking", async (req, res) => {
 });
 
 // Handle T&C form submission
-app.post("/api/submit-tc", async (req, res) => {
+app.post("/prioritybooking/api/submit-tc", async (req, res) => {
   const { lead_id, token, name, address, date, signature } = req.body;
 
   // ── 1. Validate inputs ──
@@ -228,7 +228,7 @@ app.post("/api/submit-tc", async (req, res) => {
 
 // ─── PayMongo Webhook — Real-time payment sync ───────────
 
-app.post("/webhook/paymongo", async (req, res) => {
+app.post("/prioritybooking/webhook/paymongo", async (req, res) => {
   const event = req.body;
 
   // Respond immediately so PayMongo doesn't retry
@@ -289,7 +289,7 @@ app.post("/webhook/paymongo", async (req, res) => {
 });
 
 // Health check
-app.get("/health", (req, res) => res.json({ status: "ok" }));
+app.get("/prioritybooking/health", (req, res) => res.json({ status: "ok" }));
 
 // ─── Start ────────────────────────────────────────────────
 
