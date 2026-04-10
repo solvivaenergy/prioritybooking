@@ -1,0 +1,6 @@
+.env
+node_modules/
+OdooKeys.txt
+PaymongoKeys.txt
+odooapitest.py
+paymongoapitest.py
