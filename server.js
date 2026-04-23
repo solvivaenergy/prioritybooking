@@ -170,7 +170,7 @@ app.post("/prioritybooking/api/submit-tc", async (req, res) => {
         data: {
           attributes: {
             amount: 500000, // ₱5,000 in centavos
-            description: `EV Legal - Priority Booking Fee - ${name}`,
+            description: `Solviva Energy - Priority Booking Fee for ${name}`,
             remarks: `Odoo Lead ID: ${lead_id}`,
           },
         },

@@ -1,213 +1,277 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Priority Booking — Terms & Conditions</title>
+  <title>Priority Booking — Terms and Conditions</title>
   <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.2.0/dist/signature_pad.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --primary: #1f522b;
-      --primary-light: #d2ff1e;
-      --accent: #006ac6;
-      --black: #000000;
-      --white: #ffffff;
-      --gray-50: #f9fafb;
-      --gray-100: #f3f4f6;
-      --gray-200: #e5e7eb;
-      --gray-300: #d1d5db;
-      --gray-500: #6b7280;
-      --gray-700: #374151;
-      --gray-900: #111827;
-      --red: #dc2626;
+      --primary:        #1f522b;   /* Solviva dark green */
+      --primary-light:  #d2ff1e;   /* Solviva lime */
+      --accent:         #006ac6;   /* Solviva blue */
+      --black:          #000000;
+      --white:          #ffffff;
+      --bg:             #eef3fb;   /* soft blue-gray page background */
+      --card:           #ffffff;
+      --border:         #e3e8ef;
+      --text:           #1a1f2b;
+      --muted:          #6b7280;
+      --input-border:   #d9dee6;
+      --red:            #dc2626;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    html, body { height: 100%; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--gray-50);
-      color: var(--gray-900);
-      line-height: 1.6;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                   'Helvetica Neue', Arial, sans-serif;
+      background: #F2F4F7;
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Header ── */
-    .header {
-      background: var(--primary);
-      color: var(--white);
-      padding: 1.5rem 2rem;
-      text-align: center;
-    }
-    .header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-    .header .subtitle {
-      color: var(--primary-light);
-      font-size: 0.95rem;
-      margin-top: 0.25rem;
-    }
-
-    /* ── Container ── */
-    .container {
-      max-width: 800px;
+    /* ── Page wrapper (the outlined frame in the mock) ── */
+    .page {
+      max-width: 560px;
       margin: 2rem auto;
-      padding: 0 1rem;
+      padding: 1.75rem 1.25rem 2.5rem;
+      /* border: 1px solid #cfe0f5; */
+      background: var(#F2F4F7);
+      border-radius: 4px;
     }
 
-    /* ── T&C Card ── */
-    .tc-card {
-      background: var(--white);
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      padding: 2rem;
+    /* ── Brand header ── */
+    .brand {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       margin-bottom: 1.5rem;
     }
-    .tc-card h2 {
-      font-size: 1.25rem;
-      color: var(--primary);
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--primary-light);
+    .brand-logo {
+      height: 48px;
+      width: 167px;
+      display: block;
     }
-    .tc-card h3 {
-      font-size: 1rem;
-      color: var(--primary);
-      margin: 1.25rem 0 0.5rem;
+
+    .page-title {
+      text-align: center;
+      font-size: 30px;
+      font-weight: 600;
+      line-height: 38px;
+      color: #344054;
+      margin-bottom: 1.25rem;
     }
-    .tc-card p, .tc-card li {
-      font-size: 0.9rem;
-      color: var(--gray-700);
-      margin-bottom: 0.5rem;
+
+    /* ── Amount card (blue) ── */
+    .amount-card {
+      background: var(--accent);
+      border-radius: 14px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      color: var(--white);
+      box-shadow: 0 6px 18px rgba(0,106,198,0.18);
+      margin-bottom: 1.25rem;
     }
-    .tc-card ol, .tc-card ul {
-      padding-left: 1.5rem;
+    .amount-card .amount {
+      font-size: 36px;
+      font-weight: 600;
+      line-height: 44px;
+      color: var(--primary-light);
+      letter-spacing: -0.72px;
+    }
+    .amount-card .label {
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 28px;
+      color: #fcfcfc;
+      margin-top: 0.35rem;
+    }
+    .amount-card .sub {
+      font-size: 14px;
+      line-height: 20px;
+      color: rgba(252,252,252,0.85);
+      margin-top: 0.15rem;
+    }
+
+    /* ── Generic card ── */
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── Scrollable T&C content ── */
+    .tc-scroll {
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+    .tc-scroll::-webkit-scrollbar { width: 6px; }
+    .tc-scroll::-webkit-scrollbar-thumb {
+      background: #cfd6e0;
+      border-radius: 3px;
+    }
+    .tc-scroll p {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      color: #000000;
       margin-bottom: 0.75rem;
     }
-    .tc-card ol li {
-      margin-bottom: 0.4rem;
+    .tc-scroll h3 {
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 28px;
+      color: #000000;
+      margin: 0.9rem 0 0.35rem;
+    }
+    .tc-scroll h3:first-child { margin-top: 0; }
+    .tc-scroll ul {
+      padding-left: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .tc-scroll ul li {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+      color: #000000;
+      margin-bottom: 0.35rem;
+      list-style: disc;
     }
 
-    /* ── Agreement Form ── */
-    .form-card {
-      background: var(--white);
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      padding: 2rem;
-      margin-bottom: 2rem;
+    /* ── Agreement form ── */
+    .form-title {
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 28px;
+      color: #000000;
+      margin-bottom: 0.35rem;
     }
-    .form-card h2 {
-      font-size: 1.25rem;
-      color: var(--primary);
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--primary-light);
+    .form-desc {
+      font-size: 14px;
+      line-height: 20px;
+      color: var(--muted);
+      margin-bottom: 1rem;
     }
 
-    .form-group {
-      margin-bottom: 1.25rem;
-    }
+    .form-group { margin-bottom: 0.9rem; }
     .form-group label {
       display: block;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--gray-700);
-      margin-bottom: 0.375rem;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+      color: #344054;
+      margin-bottom: 0.35rem;
     }
-    .form-group label .required {
-      color: var(--red);
-    }
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      padding: 0.625rem 0.75rem;
-      border: 1px solid var(--gray-300);
-      border-radius: 8px;
-      font-size: 0.9rem;
-      color: var(--gray-900);
-      transition: border-color 0.2s;
-    }
-    .form-group input:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(31,82,43,0.1);
-    }
-    .form-group textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
+    .form-group .required { color: var(--red); }
 
-    /* ── Signature ── */
-    .signature-section {
-      margin-bottom: 1.25rem;
-    }
-    .signature-section label {
-      display: block;
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--gray-700);
-      margin-bottom: 0.375rem;
-    }
-    .signature-wrapper {
-      border: 1px solid var(--gray-300);
-      border-radius: 8px;
-      overflow: hidden;
-      position: relative;
+    .input,
+    .textarea {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
       background: var(--white);
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--text);
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input:focus,
+    .textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,106,198,0.12);
+    }
+    .textarea { resize: vertical; min-height: 90px; }
+
+    /* Input with leading icon (address pin) */
+    .input-icon {
+      position: relative;
+    }
+    .input-icon .icon {
+      position: absolute;
+      left: 0.7rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+    }
+    .input-icon .input { padding-left: 2.1rem; }
+
+    /* ── Signature canvas ── */
+    .signature-wrapper {
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      background: var(--white);
+      overflow: hidden;
     }
     .signature-wrapper canvas {
       display: block;
       width: 100%;
-      height: 180px;
+      height: 110px;
       cursor: crosshair;
+      background: var(--white);
     }
     .signature-actions {
       display: flex;
       justify-content: flex-end;
-      padding: 0.5rem;
-      border-top: 1px solid var(--gray-100);
+      padding: 0.35rem 0.5rem;
+      border-top: 1px solid var(--border);
     }
     .btn-clear {
       background: none;
-      border: 1px solid var(--gray-300);
+      border: 1px solid var(--input-border);
       border-radius: 6px;
-      padding: 0.3rem 0.75rem;
-      font-size: 0.8rem;
-      color: var(--gray-500);
+      padding: 0.25rem 0.6rem;
+      font-size: 0.72rem;
+      color: var(--muted);
       cursor: pointer;
     }
-    .btn-clear:hover { background: var(--gray-100); }
+    .btn-clear:hover { background: #f3f4f6; }
 
-    /* ── Submit button ── */
+    /* ── Submit button (lime) ── */
     .btn-submit {
       width: 100%;
-      padding: 0.875rem;
-      background: var(--primary);
-      color: var(--white);
+      padding: 0.85rem;
+      background: var(--primary-light);
       border: none;
       border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #1f522b;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: filter 0.15s, transform 0.05s;
+      margin-top: 0.5rem;
     }
-    .btn-submit:hover { background: #174522; }
+    .btn-submit:hover { filter: brightness(0.95); }
+    .btn-submit:active { transform: translateY(1px); }
     .btn-submit:disabled {
-      background: var(--gray-300);
+      background: #e5e7eb;
+      color: var(--muted);
       cursor: not-allowed;
     }
 
-    /* ── Error / info ── */
+    /* ── Error / overlay ── */
     .error-msg {
       background: #fef2f2;
       border: 1px solid #fecaca;
       color: var(--red);
-      padding: 0.75rem 1rem;
+      padding: 0.65rem 0.85rem;
       border-radius: 8px;
-      font-size: 0.875rem;
-      margin-bottom: 1rem;
+      font-size: 0.8rem;
+      margin-bottom: 0.9rem;
       display: none;
     }
     .loading-overlay {
@@ -225,50 +289,25 @@
       padding: 2rem;
       border-radius: 12px;
       text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      max-width: 320px;
     }
     .spinner {
       width: 40px; height: 40px;
-      border: 4px solid var(--gray-200);
-      border-top-color: var(--primary);
+      border: 4px solid #e5e7eb;
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
       margin: 0 auto 1rem;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Amount highlight ── */
-    .amount-highlight {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      border-radius: 8px;
-      padding: 1rem;
-      text-align: center;
-      margin: 1rem 0;
-    }
-    .amount-highlight .amount {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
-    .amount-highlight .label {
-      font-size: 0.85rem;
-      color: var(--gray-500);
-    }
-
     /* ── Responsive ── */
-    @media (max-width: 640px) {
-      .tc-card, .form-card { padding: 1.25rem; }
-      .header h1 { font-size: 1.25rem; }
+    @media (max-width: 600px) {
+      .page { margin: 0; border: none; border-radius: 0; padding: 1.25rem 0.9rem 2rem; }
+      .amount-card .amount { font-size: 28px; }
+      .page-title { font-size: 24px; }
     }
-
-    /* ── Error page ── */
-    .error-page {
-      text-align: center;
-      padding: 4rem 2rem;
-    }
-    .error-page h2 { color: var(--red); margin-bottom: 1rem; }
-    .error-page p { color: var(--gray-500); }
   </style>
 </head>
 <body>
@@ -277,124 +316,169 @@
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-box">
       <div class="spinner"></div>
-      <p style="font-weight:600; color:var(--gray-700);">Processing your agreement...</p>
-      <p style="font-size:0.85rem; color:var(--gray-500); margin-top:0.25rem;">Creating your payment link</p>
+      <p style="font-weight:600; color:var(--text);">Processing your agreement…</p>
+      <p style="font-size:0.8rem; color:var(--muted); margin-top:0.25rem;">Creating your payment link</p>
     </div>
   </div>
 
-  <!-- Header -->
-  <div class="header">
-    <h1>1882 EV Legal</h1>
-    <div class="subtitle">Priority Booking — Terms & Conditions</div>
-  </div>
+  <div class="page">
 
-  <div class="container">
+    <!-- Brand -->
+    <div class="brand">
+      <img src="solviva-logo.svg" alt="Solviva" class="brand-logo" />
+    </div>
 
-    <!-- Amount highlight -->
-    <div class="amount-highlight">
-      <div class="label">Priority Booking Fee</div>
+    <h1 class="page-title">Priority Booking Terms and Conditions</h1>
+
+    <!-- Amount card -->
+    <div class="amount-card">
       <div class="amount">₱5,000.00</div>
-      <div class="label">This amount will be deducted from your total bill</div>
+      <div class="label">Priority booking fee</div>
+      <div class="sub">This amount will be deducted from your final solar bill</div>
     </div>
 
     <!-- T&C Content -->
-    <div class="tc-card">
-      <h2>Terms & Conditions</h2>
+    <div class="card">
+      <div class="tc-scroll">
+        <p>This Priority Booking Fee Terms and Conditions (&ldquo;Terms&rdquo;) is entered into between the undersigned client (&ldquo;Client&rdquo;) and Solviva Energy Incorporated (&ldquo;Solviva&rdquo;). By paying the Booking Fee the Client unconditionally agrees to be bound by the provisions of the Terms.</p>
 
-      <h3>1. PARTIES</h3>
-      <p>This Agreement is entered into by and between:</p>
-      <ul>
-        <li><strong>1882 EV Legal</strong> (hereinafter referred to as the "Provider")</li>
-        <li>The <strong>Subscriber</strong>, whose name and details are provided below</li>
-      </ul>
+        <h3>1. Purpose of the Booking Fee</h3>
+        <p>The Booking Fee is a purely voluntary arrangement whereby the Client pays the amount stipulated in Section 2 for the sole purpose of securing a priority site assessment schedule with Solviva. The Booking Fee shall be subject to these Terms and Conditions.</p>
 
-      <h3>2. PURPOSE</h3>
-      <p>The Subscriber agrees to participate in the Provider's Priority Booking program, which grants preferential scheduling and service priority in exchange for an upfront booking fee.</p>
+        <h3>2. Amount</h3>
+        <p>The Client shall, upon execution of the Terms, pay to Solviva the sum of Five Thousand Pesos (&#8369;5,000.00) as the Booking Fee. This Booking Fee shall be inclusive of Value Added Tax (VAT), withholding tax and all other applicable taxes.</p>
 
-      <h3>3. PRIORITY BOOKING FEE</h3>
-      <ol>
-        <li>The Subscriber shall pay a non-refundable Priority Booking Fee of <strong>Five Thousand Pesos (₱5,000.00)</strong>.</li>
-        <li>This fee shall be <strong>deducted from the Subscriber's total bill</strong> upon availment of the Provider's services.</li>
-        <li>Payment shall be processed through <strong>PayMongo</strong>, a third-party payment gateway.</li>
-      </ol>
+        <h3>3. Application of the Booking Fee</h3>
+        <p>3.1 The Booking Fee shall be credited toward the final Contract Price should the nominated Project Site be found eligible for a rooftop solar PV system, and the Client proceeds with the execution of the Project Documents (as defined below) with Solviva.</p>
+        <p>3.2 Solviva in its sole discretion may opt to refund the Booking Fee to the Client for any reason whatsoever including for reasons specified in Section 6.1 of the Terms.</p>
+        <p>3.3 Upon confirmation of payment of the Booking Fee, Solviva will: tag the account internally as a Priority Booking account; and prioritize the Client for site assessment scheduling, subject to serviceability, access, and qualification checks.</p>
 
-      <h3>4. PRIORITY BENEFITS</h3>
-      <p>Upon successful payment, the Subscriber shall be entitled to:</p>
-      <ol>
-        <li>Priority scheduling for consultations and service delivery</li>
-        <li>Dedicated support and expedited processing</li>
-        <li>Guaranteed slot reservation ahead of non-priority bookings</li>
-      </ol>
+        <h3>4. Site Assessment Scheduling</h3>
+        <p>4.1 Solviva shall use commercially reasonable efforts to schedule the Client&rsquo;s site assessment within five (5) Business Days from payment confirmation. This timeline is a target only and may be affected by factors outside of Solviva&rsquo;s control, including but not limited to:</p>
+        <ul>
+          <li>Client availability;</li>
+          <li>Site accessibility;</li>
+          <li>Weather conditions;</li>
+          <li>Safety considerations;</li>
+          <li>Installer or assessor availability;</li>
+          <li>Coverage limitations;</li>
+          <li>Other analogous factors.</li>
+        </ul>
 
-      <h3>5. PAYMENT TERMS</h3>
-      <ol>
-        <li>Payment is due upon agreement to these Terms & Conditions.</li>
-        <li>The Subscriber will be redirected to a secure PayMongo payment page upon submission of this form.</li>
-        <li>A PayMongo reference number will be generated for tracking purposes.</li>
-        <li>The booking fee is <strong>non-refundable</strong> once payment has been successfully processed.</li>
-      </ol>
+        <h3>5. Qualification and Approval</h3>
+        <p>5.1 The Client acknowledges that the payment of the Booking Fee does not guarantee:</p>
+        <ul>
+          <li>Project feasibility, project acceptance, or execution of the appropriate Solviva Solar Photovoltaic System Contract or equivalent document (&ldquo;Project Documents&rdquo;) between the Client and Solviva;</li>
+          <li>Eligibility for promotions, discounts, or preferred payment schemes or arrangements;</li>
+          <li>Technical feasibility of installation; or</li>
+          <li>Immediate installation.</li>
+        </ul>
+        <p>5.2 The Client must satisfy Solviva&rsquo;s applicable qualification, technical, and serviceability requirements. Nothing in this Terms shall be construed as a commitment or obligation on the part of Solviva to execute the Project Documents with the Client.</p>
 
-      <h3>6. DEDUCTION FROM TOTAL BILL</h3>
-      <ol>
-        <li>The ₱5,000.00 Priority Booking Fee will be credited toward the Subscriber's total service fee.</li>
-        <li>If the Subscriber does not avail of the Provider's services within <strong>twelve (12) months</strong> from the date of payment, the booking fee shall be forfeited.</li>
-      </ol>
+        <h3>6. Non-Refundability</h3>
+        <p>6.1 The Booking Fee is non-refundable once paid, except in the following cases:</p>
+        <ul>
+          <li>After Solviva&rsquo;s conduct of the site assessment, Solviva determines that the roof is not suitable for solar installation.</li>
+          <li>Solviva is unable to schedule the site assessment within five (5) Business Days from confirmation of receipt of the Booking Fee from the Client other than due to the reasons specified in Sub-Section 6.2.</li>
+          <li>Solviva is unable to conduct the site assessment on the Agreed Schedule through no fault of the Client and the Client does not wish to proceed with the site assessment on a different date.</li>
+          <li>Client is ineligible to proceed with the execution of the Project Documents as determined by Solviva.</li>
+        </ul>
+        <p>Provided that, where practicable, Solviva shall have the option to either (i) offer to the Client reasonable service recovery or accommodation, or (ii) refund the Booking Fee to the Client, without interest.</p>
+        <p>6.2 For clarity, the Booking Fee shall not be refunded for reasons including but not limited to:</p>
+        <ul>
+          <li>a. Change of mind by the Client;</li>
+          <li>b. Delay caused by the Client including due to Client&rsquo;s unavailability on the Agreed Schedule or failure to provide safe and unrestricted access to Solviva or its authorized agents or representatives;</li>
+          <li>c. Client&rsquo;s decision not to proceed with the scheduling of the site assessment;</li>
+          <li>d. Inability or refusal by the Client to sign the Project Documents;</li>
+          <li>e. Inability to complete documentary, permitting, or payment requirements; or</li>
+          <li>f. Analogous circumstances.</li>
+        </ul>
 
-      <h3>7. DATA PRIVACY</h3>
-      <ol>
-        <li>The Provider shall collect and process the Subscriber's personal information in accordance with the <strong>Data Privacy Act of 2012 (R.A. 10173)</strong>.</li>
-        <li>Information collected shall be used solely for the purpose of this booking and service delivery.</li>
-        <li>The Subscriber's data shall not be shared with third parties without consent, except as required by law.</li>
-      </ol>
+        <h3>7. Client Responsibilities</h3>
+        <p>7.1 The Client agrees to:</p>
+        <ul>
+          <li>a. Provide timely, accurate and complete information to Solviva;</li>
+          <li>b. Provide timely and unrestricted access to the Project Site including gate passes and other applicable access permits;</li>
+          <li>c. Be personally available or if unavailable, to assign an authorized representative who shall be present and fully authorized to act for the Client during the agreed date of the scheduled site assessment between the hours of 8:00 a.m. to 6:00 p.m. (&ldquo;Agreed Schedule&rdquo;); and</li>
+          <li>d. Fully cooperate with Solviva&rsquo;s requests for documents, utility bills, photos, and other relevant project information.</li>
+        </ul>
+        <p>7.2 The Client acknowledges that its failure to comply with the above responsibilities may result in Solviva being prevented from conducting the site assessment on the Agreed Schedule.</p>
 
-      <h3>8. CANCELLATION & TERMINATION</h3>
-      <ol>
-        <li>The Subscriber may cancel their priority booking by providing written notice to the Provider.</li>
-        <li>Cancellation <strong>does not</strong> entitle the Subscriber to a refund of the booking fee.</li>
-        <li>The Provider reserves the right to terminate this arrangement if the Subscriber violates any terms herein.</li>
-      </ol>
+        <h3>8. Site Visit Rescheduling</h3>
+        <p>8.1 If on the Agreed Schedule, the Client is unable to receive or accommodate Solviva, or if Solviva is prevented from accessing the Project Site or otherwise proceed with or conduct the site assessment due to the fault of the Client, Solviva shall, at its sole discretion, have the option to:</p>
+        <ul>
+          <li>Forfeit the Booking Fee; or</li>
+          <li>Reschedule the site assessment based on the next available slot agreed with the Client. Such rescheduling, if agreed to in writing by Solviva, may affect the Client&rsquo;s priority status and timeline.</li>
+        </ul>
+        <p>8.2 The Client shall have one (1) opportunity to request to reschedule the site assessment from the Agreed Schedule to another date provided that:</p>
+        <ul>
+          <li>The Client provides at least forty-eight (48) hours prior written notice to Solviva of its request to reschedule by sending an e-mail to marketing@solvivaenergy.com with a copy to the Client&rsquo;s designated sales representative, using the subject &ldquo;Request to Reschedule&rdquo; and proposing at least three (3) alternative dates;</li>
+          <li>The Client agrees that its failure to strictly abide by Section 8.2 may result in the forfeiture of the Booking Fee; and</li>
+          <li>The new site assessment schedule shall be agreed in writing with Solviva and shall be subject to Solviva&rsquo;s schedule availability.</li>
+        </ul>
 
-      <h3>9. GOVERNING LAW</h3>
-      <p>This Agreement shall be governed by and construed in accordance with the laws of the <strong>Republic of the Philippines</strong>. Any disputes arising from this agreement shall be settled through amicable negotiation, and if unresolved, through the appropriate courts.</p>
+        <h3>9. Non-Transferability</h3>
+        <p>The Booking Fee is non-transferable and may only be applied to the specific Client and nominated Project Site for which it was paid, unless Solviva expressly approves otherwise in writing.</p>
 
-      <h3>10. ACKNOWLEDGMENT</h3>
-      <p>By signing below and submitting this form, the Subscriber acknowledges that they have read, understood, and agree to be bound by these Terms & Conditions.</p>
+        <h3>10. Final Determination</h3>
+        <p>Solviva reserves the right to make the final determination on:</p>
+        <ul>
+          <li>a. Project Site suitability;</li>
+          <li>b. Project feasibility;</li>
+          <li>c. Scheduling; and</li>
+          <li>d. Applicability of any refund under these Terms and Conditions.</li>
+        </ul>
+      </div>
     </div>
-
     <!-- Agreement Form -->
-    <div class="form-card">
-      <h2>Subscriber Agreement</h2>
+    <div class="card">
+      <div class="form-title">Agreement</div>
+      <p class="form-desc">
+        By paying the Booking Fee, the Client confirms that they have read,
+        understood, and agreed to these Terms and Conditions.
+      </p>
 
       <div class="error-msg" id="errorMsg"></div>
 
       <form id="tcForm" novalidate>
         <div class="form-group">
-          <label>Full Name <span class="required">*</span></label>
-          <input type="text" id="name" name="name" placeholder="e.g. Juan Dela Cruz" required />
+          <label>Client’s full name <span class="required">*</span></label>
+          <input type="text" id="name" name="name" class="input" required />
         </div>
 
         <div class="form-group">
-          <label>Complete Address <span class="required">*</span></label>
-          <textarea id="address" name="address" rows="2" placeholder="e.g. 123 Main St, Brgy. San Antonio, Makati City" required></textarea>
+          <label>Client’s Nominated Project Site <span class="required">*</span></label>
+          <div class="input-icon">
+            <!-- pin icon -->
+            <svg class="icon" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"
+                 xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 1 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <input type="text" id="address" name="address"
+                   class="input" placeholder="Enter address" required />
+          </div>
         </div>
 
         <div class="form-group">
-          <label>Date <span class="required">*</span></label>
-          <input type="date" id="date" name="date" required />
-        </div>
-
-        <div class="signature-section">
-          <label>Signature of Subscriber <span class="required">*</span></label>
+          <label>Enter your Signature <span class="required">*</span></label>
           <div class="signature-wrapper">
             <canvas id="signatureCanvas"></canvas>
             <div class="signature-actions">
-              <button type="button" class="btn-clear" id="clearSignature">Clear Signature</button>
+              <button type="button" class="btn-clear" id="clearSignature">Clear</button>
             </div>
           </div>
         </div>
 
+        <div class="form-group">
+          <label>Date <span class="required">*</span></label>
+          <input type="date" id="date" name="date" class="input" required />
+        </div>
+
         <button type="submit" class="btn-submit" id="submitBtn">
-          I Agree & Proceed to Payment
+          I Agree &amp; Proceed to Payment
         </button>
       </form>
     </div>
@@ -405,7 +489,7 @@
     // ── Get URL params ──
     const params = new URLSearchParams(window.location.search);
     const leadId = params.get('lead_id');
-    const token = params.get('token');
+    const token  = params.get('token');
 
     // ── Date default ──
     const dateInput = document.getElementById('date');
@@ -418,11 +502,10 @@
       penColor: 'rgb(0, 0, 0)',
     });
 
-    // Resize canvas to match CSS display size
     function resizeCanvas() {
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * ratio;
+      const rect  = canvas.getBoundingClientRect();
+      canvas.width  = rect.width  * ratio;
       canvas.height = rect.height * ratio;
       canvas.getContext('2d').scale(ratio, ratio);
       signaturePad.clear();
@@ -435,9 +518,9 @@
     });
 
     // ── Form submission ──
-    const form = document.getElementById('tcForm');
-    const errorMsg = document.getElementById('errorMsg');
-    const submitBtn = document.getElementById('submitBtn');
+    const form           = document.getElementById('tcForm');
+    const errorMsg       = document.getElementById('errorMsg');
+    const submitBtn      = document.getElementById('submitBtn');
     const loadingOverlay = document.getElementById('loadingOverlay');
 
     function showError(msg) {
@@ -445,26 +528,21 @@
       errorMsg.style.display = 'block';
       window.scrollTo({ top: errorMsg.offsetTop - 100, behavior: 'smooth' });
     }
-
-    function hideError() {
-      errorMsg.style.display = 'none';
-    }
+    function hideError() { errorMsg.style.display = 'none'; }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideError();
 
-      const name = document.getElementById('name').value.trim();
+      const name    = document.getElementById('name').value.trim();
       const address = document.getElementById('address').value.trim();
-      const date = document.getElementById('date').value;
+      const date    = document.getElementById('date').value;
 
-      // Validate
-      if (!name) { showError('Please enter your full name.'); return; }
-      if (!address) { showError('Please enter your complete address.'); return; }
-      if (!date) { showError('Please select a date.'); return; }
-      if (signaturePad.isEmpty()) { showError('Please provide your signature.'); return; }
+      if (!name)                   { showError('Please enter your full name.'); return; }
+      if (!address)                { showError('Please enter your nominated project site address.'); return; }
+      if (!date)                   { showError('Please select a date.'); return; }
+      if (signaturePad.isEmpty())  { showError('Please provide your signature.'); return; }
 
-      // Disable form
       submitBtn.disabled = true;
       loadingOverlay.classList.add('active');
 
@@ -488,7 +566,6 @@
           throw new Error(data.error || 'Something went wrong. Please try again.');
         }
 
-        // Redirect to PayMongo checkout
         window.location.href = data.checkout_url;
 
       } catch (err) {
