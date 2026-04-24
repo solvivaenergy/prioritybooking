@@ -17,8 +17,6 @@ const {
   ODOO_API_KEY,
   HMAC_SECRET,
   PORT = 3000,
-  ODOO_TEMPLATE_CLIENT,
-  ODOO_TEMPLATE_SALESREP,
 } = process.env;
 
 // ─── Helpers ──────────────────────────────────────────────
@@ -285,24 +283,6 @@ app.post("/prioritybooking/webhook/paymongo", async (req, res) => {
     console.log(
       `Webhook: Lead ${lead.id} marked as PAID (payment: ${paymentId})`,
     );
-
-    // ── Send emails via Odoo mail templates ──
-    const sendTemplate = async (templateId, leadId, label) => {
-      if (!templateId) {
-        console.warn(`Webhook: No template ID for ${label}, skipping`);
-        return;
-      }
-      await odooExecute(
-        "mail.template",
-        "send_mail",
-        [parseInt(templateId), leadId],
-        { force_send: true },
-      );
-      console.log(`Webhook: ${label} email sent via template ${templateId}`);
-    };
-
-    await sendTemplate(ODOO_TEMPLATE_CLIENT, lead.id, "client");
-    await sendTemplate(ODOO_TEMPLATE_SALESREP, lead.id, "sales rep");
   } catch (err) {
     console.error("Webhook processing error:", err.message);
   }
