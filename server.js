@@ -5,18 +5,25 @@ const axios = require("axios");
 const path = require("path");
 
 const app = express();
+
+// Capture raw body for PayMongo webhook signature verification (must be before express.json)
+app.use("/prioritybooking/webhook/paymongo", express.raw({ type: "application/json" }));
+
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/prioritybooking", express.static(path.join(__dirname, "public")));
 
 const {
   PAYMONGO_SECRET_KEY,
+  PAYMONGO_WEBHOOK_SECRET,
   ODOO_URL,
   ODOO_DB,
   ODOO_USER,
   ODOO_API_KEY,
   HMAC_SECRET,
   PORT = 3000,
+  ODOO_TEMPLATE_CLIENT,
+  ODOO_TEMPLATE_SALESREP,
 } = process.env;
 
 // ─── Helpers ──────────────────────────────────────────────
@@ -229,7 +236,29 @@ app.post("/prioritybooking/api/submit-tc", async (req, res) => {
 // ─── PayMongo Webhook — Real-time payment sync ───────────
 
 app.post("/prioritybooking/webhook/paymongo", async (req, res) => {
-  const event = req.body;
+  // ── Verify PayMongo webhook signature ──
+  const sigHeader = req.headers["paymongo-signature"];
+  if (!sigHeader || !PAYMONGO_WEBHOOK_SECRET) {
+    return res.status(401).json({ error: "Missing signature" });
+  }
+
+  try {
+    const parts = Object.fromEntries(sigHeader.split(",").map((p) => p.split("=")));
+    const timestamp = parts.t;
+    const receivedSig = parts.te || parts.li; // te = test, li = live
+    const rawBody = req.body instanceof Buffer ? req.body.toString() : JSON.stringify(req.body);
+    const expectedSig = crypto
+      .createHmac("sha256", PAYMONGO_WEBHOOK_SECRET)
+      .update(`${timestamp}.${rawBody}`)
+      .digest("hex");
+    if (!crypto.timingSafeEqual(Buffer.from(expectedSig), Buffer.from(receivedSig))) {
+      return res.status(401).json({ error: "Invalid signature" });
+    }
+  } catch {
+    return res.status(401).json({ error: "Signature verification failed" });
+  }
+
+  const event = JSON.parse(req.body instanceof Buffer ? req.body.toString() : JSON.stringify(req.body));
 
   // Respond immediately so PayMongo doesn't retry
   res.json({ received: true });
@@ -283,6 +312,24 @@ app.post("/prioritybooking/webhook/paymongo", async (req, res) => {
     console.log(
       `Webhook: Lead ${lead.id} marked as PAID (payment: ${paymentId})`,
     );
+
+    // ── Send emails via Odoo mail templates ──
+    const sendTemplate = async (templateId, leadId, label) => {
+      if (!templateId) {
+        console.warn(`Webhook: No template ID for ${label}, skipping`);
+        return;
+      }
+      await odooExecute(
+        "mail.template",
+        "send_mail",
+        [parseInt(templateId), leadId],
+        { force_send: true },
+      );
+      console.log(`Webhook: ${label} email sent via template ${templateId}`);
+    };
+
+    await sendTemplate(ODOO_TEMPLATE_CLIENT, lead.id, "client");
+    await sendTemplate(ODOO_TEMPLATE_SALESREP, lead.id, "sales rep");
   } catch (err) {
     console.error("Webhook processing error:", err.message);
   }
