@@ -292,11 +292,12 @@ app.post("/prioritybooking/webhook/paymongo", async (req, res) => {
         console.warn(`Webhook: No template ID for ${label}, skipping`);
         return;
       }
-      await odooExecute("mail.template", "send_mail", [
-        parseInt(templateId),
-        leadId,
+      await odooExecute(
+        "mail.template",
+        "send_mail",
+        [parseInt(templateId), leadId],
         { force_send: true },
-      ]);
+      );
       console.log(`Webhook: ${label} email sent via template ${templateId}`);
     };
 
