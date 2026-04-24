@@ -7,7 +7,10 @@ const path = require("path");
 const app = express();
 
 // Capture raw body for PayMongo webhook signature verification (must be before express.json)
-app.use("/prioritybooking/webhook/paymongo", express.raw({ type: "application/json" }));
+app.use(
+  "/prioritybooking/webhook/paymongo",
+  express.raw({ type: "application/json" }),
+);
 
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -243,22 +246,34 @@ app.post("/prioritybooking/webhook/paymongo", async (req, res) => {
   }
 
   try {
-    const parts = Object.fromEntries(sigHeader.split(",").map((p) => p.split("=")));
+    const parts = Object.fromEntries(
+      sigHeader.split(",").map((p) => p.split("=")),
+    );
     const timestamp = parts.t;
     const receivedSig = parts.te || parts.li; // te = test, li = live
-    const rawBody = req.body instanceof Buffer ? req.body.toString() : JSON.stringify(req.body);
+    const rawBody =
+      req.body instanceof Buffer
+        ? req.body.toString()
+        : JSON.stringify(req.body);
     const expectedSig = crypto
       .createHmac("sha256", PAYMONGO_WEBHOOK_SECRET)
       .update(`${timestamp}.${rawBody}`)
       .digest("hex");
-    if (!crypto.timingSafeEqual(Buffer.from(expectedSig), Buffer.from(receivedSig))) {
+    if (
+      !crypto.timingSafeEqual(
+        Buffer.from(expectedSig),
+        Buffer.from(receivedSig),
+      )
+    ) {
       return res.status(401).json({ error: "Invalid signature" });
     }
   } catch {
     return res.status(401).json({ error: "Signature verification failed" });
   }
 
-  const event = JSON.parse(req.body instanceof Buffer ? req.body.toString() : JSON.stringify(req.body));
+  const event = JSON.parse(
+    req.body instanceof Buffer ? req.body.toString() : JSON.stringify(req.body),
+  );
 
   // Respond immediately so PayMongo doesn't retry
   res.json({ received: true });
