@@ -43,6 +43,7 @@ leads = models.execute_kw(
     {
         "fields": [
             "id", "partner_name",
+            "x_studio_tc_link",
             "x_studio_tc_agreed",
             "x_studio_paymongo_link_id",
             "x_studio_priority_booking_paid",
@@ -57,6 +58,7 @@ if not leads:
 
 lead = leads[0]
 print(f"Lead found: [{lead['id']}] {lead.get('partner_name', '(no name)')}")
+print(f"  tc_link              : {lead.get('x_studio_tc_link')}")
 print(f"  tc_agreed            : {lead.get('x_studio_tc_agreed')}")
 print(f"  paymongo_link_id     : {lead.get('x_studio_paymongo_link_id')}")
 print(f"  priority_booking_paid: {lead.get('x_studio_priority_booking_paid')}")
@@ -74,6 +76,7 @@ result = models.execute_kw(
         [lead_id],
         {
             # T&C fields
+            "x_studio_tc_link": False,
             "x_studio_tc_agreed": False,
             "x_studio_tc_name": False,
             "x_studio_tc_address": False,

@@ -29,6 +29,7 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    [hidden] { display: none !important; }
 
     body {
       font-family: 'DM Sans', -apple-system, sans-serif;
@@ -427,10 +428,11 @@
               <th>Agreed Date &amp; Time</th>
               <th>Payment Link</th>
               <th>Paid</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="leads-tbody">
-            <tr><td class="state-cell" colspan="8">
+            <tr><td class="state-cell" colspan="9">
               <span class="spinner"></span> Loading…
             </td></tr>
           </tbody>
@@ -440,8 +442,17 @@
 
   </main>
 </div>
-
-<script>
+<!-- ══ RESET CONFIRM MODAL ═══════════════════════════════════════════ -->
+<div id="reset-modal" hidden style="position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:999">
+  <div style="background:#fff;border-radius:12px;padding:2rem;width:340px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+    <div style="font-weight:700;font-size:1rem;margin-bottom:0.5rem;color:var(--err-text)">⚠ Reset Lead?</div>
+    <div style="color:var(--muted);font-size:0.875rem;margin-bottom:1.5rem;">This will clear <strong>all priority booking fields</strong> for <strong id="reset-name"></strong>. This cannot be undone.</div>
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+      <button class="btn btn-ghost" id="reset-cancel-btn" style="padding:0.5rem 1.25rem;">Cancel</button>
+      <button class="btn" id="reset-confirm-btn" style="padding:0.5rem 1.25rem;background:var(--err-text);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Reset</button>
+    </div>
+  </div>
+</div>
 "use strict";
 
 /* ══ Helpers ══════════════════════════════════════════════════════════ */
@@ -500,7 +511,7 @@ document.addEventListener("click", (e) => {
 /* ══ Auth ══════════════════════════════════════════════════════════════ */
 
 async function init() {
-  const r = await fetch("/prioritybooking/api/dashboard/leads").catch(() => ({ status: 500 }));
+  const r = await apiFetch("/prioritybooking/api/dashboard/leads").catch(() => ({ status: 500 }));
   if (r.status === 401) {
     showLogin();
   } else {
@@ -516,13 +527,20 @@ async function init() {
 }
 
 function showLogin() {
-  $("login-view").removeAttribute("hidden");
-  $("dashboard-view").setAttribute("hidden", "");
+  sessionStorage.removeItem('db_token');
+  $('login-view').removeAttribute('hidden');
+  $('dashboard-view').setAttribute('hidden', '');
 }
 
 function showDashboard() {
-  $("login-view").setAttribute("hidden", "");
-  $("dashboard-view").removeAttribute("hidden");
+  $('login-view').setAttribute('hidden', '');
+  $('dashboard-view').removeAttribute('hidden');
+}
+
+function apiFetch(url, opts = {}) {
+  const token = sessionStorage.getItem('db_token') || '';
+  opts.headers = Object.assign({ 'Authorization': 'Bearer ' + token }, opts.headers || {});
+  return fetch(url, opts);
 }
 
 /* Login */
@@ -543,8 +561,10 @@ async function doLogin() {
     });
     const d = await r.json();
     if (r.ok) {
+      sessionStorage.setItem('db_token', d.token);
       showDashboard();
       loadLeads();
+      return;
     } else {
       $("login-err").textContent = d.error || "Invalid password.";
     }
@@ -563,7 +583,7 @@ async function loadLeads() {
   $("leads-tbody").innerHTML = `<tr><td class="state-cell" colspan="8"><span class="spinner"></span> Loading…</td></tr>`;
   $("leads-count").textContent = "";
   try {
-    const r = await fetch("/prioritybooking/api/dashboard/leads");
+    const r = await apiFetch("/prioritybooking/api/dashboard/leads");
     if (r.status === 401) { showLogin(); return; }
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || "Server error");
@@ -574,8 +594,9 @@ async function loadLeads() {
   }
 }
 
+/* showTableError colspan fix */
 function showTableError(msg) {
-  $("leads-tbody").innerHTML = `<tr><td class="state-cell" colspan="8">
+  $('leads-tbody').innerHTML = `<tr><td class="state-cell" colspan="9">
     ⚠ ${esc(msg)} &nbsp; <button class="btn btn-ghost" onclick="loadLeads()" style="font-size:0.8125rem;padding:0.3rem 0.75rem;">Retry</button>
   </td></tr>`;
 }
@@ -583,7 +604,7 @@ function showTableError(msg) {
 function renderLeads(leads) {
   $("leads-count").textContent = `${leads.length} lead${leads.length !== 1 ? "s" : ""}`;
   if (leads.length === 0) {
-    $("leads-tbody").innerHTML = `<tr><td class="state-cell" colspan="8">No leads found with T&amp;C links.</td></tr>`;
+    $('leads-tbody').innerHTML = `<tr><td class="state-cell" colspan="9">No leads found with T&amp;C links.</td></tr>`;
     return;
   }
   $("leads-tbody").innerHTML = leads.map((l) => {
@@ -610,6 +631,7 @@ function renderLeads(leads) {
       <td style="white-space:nowrap;font-size:0.8125rem;">${fmtDate(l.x_studio_tc_agreed_datetime)}</td>
       <td>${pmCell}</td>
       <td>${badge(l.x_studio_priority_booking_paid, "Paid", "Unpaid")}</td>
+      <td><button class="btn btn-ghost reset-lead-btn" data-id="${l.id}" data-name="${esc(name)}" style="font-size:0.75rem;padding:0.25rem 0.6rem;color:var(--err-text);border-color:var(--err-bg);">Reset</button></td>
     </tr>`;
   }).join("");
 }
@@ -627,7 +649,41 @@ $("search").addEventListener("input", function () {
 
 /* Refresh */
 $("refresh-btn").addEventListener("click", loadLeads);
+/* ══ Reset Lead ════════════════════════════════════════════════════════ */
 
+let resetTargetId = null;
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.reset-lead-btn');
+  if (!btn) return;
+  resetTargetId = parseInt(btn.dataset.id, 10);
+  $('reset-name').textContent = btn.dataset.name || `Lead ${resetTargetId}`;
+  $('reset-modal').removeAttribute('hidden');
+});
+
+$('reset-cancel-btn').addEventListener('click', () => {
+  $('reset-modal').setAttribute('hidden', '');
+  resetTargetId = null;
+});
+
+$('reset-confirm-btn').addEventListener('click', async () => {
+  if (!resetTargetId) return;
+  const id = resetTargetId;
+  $('reset-modal').setAttribute('hidden', '');
+  resetTargetId = null;
+  try {
+    const r = await apiFetch('/prioritybooking/api/dashboard/reset-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lead_id: id }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Server error');
+    loadLeads();
+  } catch (err) {
+    alert('Reset failed: ' + err.message);
+  }
+});
 /* ══ URL Generator ═════════════════════════════════════════════════════ */
 
 $("gen-btn").addEventListener("click", generateUrls);
@@ -647,7 +703,7 @@ async function generateUrls() {
   btn.disabled = true; btn.textContent = "Generating…";
 
   try {
-    const r = await fetch("/prioritybooking/api/dashboard/generate-urls", {
+    const r = await apiFetch("/prioritybooking/api/dashboard/generate-urls", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lead_ids }),

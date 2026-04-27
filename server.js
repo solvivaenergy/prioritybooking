@@ -373,9 +373,14 @@ function getDashboardToken() {
 
 function checkDashboardAuth(req) {
   if (!DASHBOARD_PASSWORD) return false;
-  const token = parseCookies(req).db_session;
-  if (!token) return false;
   const expected = getDashboardToken();
+  // Accept Authorization: Bearer <token>
+  const auth = req.headers["authorization"] || "";
+  const bearer = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+  // Also accept legacy cookie
+  const cookie = parseCookies(req).db_session || "";
+  const token = bearer || cookie;
+  if (!token) return false;
   try {
     return (
       token.length === expected.length &&
@@ -406,11 +411,7 @@ app.post("/prioritybooking/dashboard/auth", (req, res) => {
     return res.status(401).json({ error: "Invalid password" });
   }
   const token = getDashboardToken();
-  res.setHeader(
-    "Set-Cookie",
-    `db_session=${token}; Path=/prioritybooking; HttpOnly; SameSite=Strict; Max-Age=86400`,
-  );
-  res.json({ ok: true });
+  res.json({ ok: true, token });
 });
 
 // Logout
@@ -431,7 +432,7 @@ app.get(
       const leads = await odooExecute(
         "crm.lead",
         "search_read",
-        [["x_studio_tc_link", "!=", false]],
+        [[["x_studio_tc_link", "!=", false]]],
         {
           fields: [
             "id",
@@ -479,7 +480,7 @@ app.post(
         const found = await odooExecute(
           "crm.lead",
           "search_read",
-          [["id", "=", id]],
+          [[["id", "=", id]]],
           {
             fields: [
               "id",
@@ -513,6 +514,51 @@ app.post(
       }
     }
     res.json({ results });
+  },
+);
+
+// API: reset all priority booking fields on a lead
+app.post(
+  "/prioritybooking/api/dashboard/reset-lead",
+  requireDashboardAuth,
+  async (req, res) => {
+    const id = parseInt(req.body.lead_id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: "Invalid lead_id" });
+    try {
+      const found = await odooExecute(
+        "crm.lead",
+        "search_read",
+        [[["id", "=", id]]],
+        { fields: ["id", "partner_name", "contact_name"], limit: 1 },
+      );
+      if (!found || found.length === 0)
+        return res.status(404).json({ error: "Lead not found" });
+      await odooExecute("crm.lead", "write", [
+        [id],
+        {
+          x_studio_tc_link: false,
+          x_studio_tc_agreed: false,
+          x_studio_tc_name: false,
+          x_studio_tc_address: false,
+          x_studio_tc_date: false,
+          x_studio_tc_signature: false,
+          x_studio_tc_agreed_datetime: false,
+          x_studio_paymongo_link_id: false,
+          x_studio_paymongo_ref: false,
+          x_studio_paymongo_checkout_url: false,
+          x_studio_priority_booking_paid: false,
+          x_studio_priority_booking_amount: false,
+        },
+      ]);
+      const lead = found[0];
+      res.json({
+        ok: true,
+        name: lead.partner_name || lead.contact_name || "",
+      });
+    } catch (err) {
+      console.error("Reset lead error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
   },
 );
 
