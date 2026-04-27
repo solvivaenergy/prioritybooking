@@ -27,6 +27,7 @@ const {
   PORT = 3000,
   ODOO_TEMPLATE_CLIENT,
   ODOO_TEMPLATE_SALESREP,
+  DASHBOARD_PASSWORD,
 } = process.env;
 
 // ─── Helpers ──────────────────────────────────────────────
@@ -349,6 +350,171 @@ app.post("/prioritybooking/webhook/paymongo", async (req, res) => {
     console.error("Webhook processing error:", err.message);
   }
 });
+
+// ─── Dashboard ─────────────────────────────────────────────────────────────
+
+function parseCookies(req) {
+  const cookies = {};
+  (req.headers.cookie || "").split(";").forEach((c) => {
+    const i = c.indexOf("=");
+    if (i > 0) {
+      cookies[c.slice(0, i).trim()] = decodeURIComponent(c.slice(i + 1).trim());
+    }
+  });
+  return cookies;
+}
+
+function getDashboardToken() {
+  return crypto
+    .createHmac("sha256", HMAC_SECRET)
+    .update(`dashboard:${DASHBOARD_PASSWORD}`)
+    .digest("hex");
+}
+
+function checkDashboardAuth(req) {
+  if (!DASHBOARD_PASSWORD) return false;
+  const token = parseCookies(req).db_session;
+  if (!token) return false;
+  const expected = getDashboardToken();
+  try {
+    return (
+      token.length === expected.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))
+    );
+  } catch {
+    return false;
+  }
+}
+
+function requireDashboardAuth(req, res, next) {
+  if (checkDashboardAuth(req)) return next();
+  return res.status(401).json({ error: "Unauthorized" });
+}
+
+// Serve dashboard HTML
+app.get("/prioritybooking/dashboard", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+});
+
+// Login
+app.post("/prioritybooking/dashboard/auth", (req, res) => {
+  if (!DASHBOARD_PASSWORD) {
+    return res.status(503).json({ error: "Dashboard not configured" });
+  }
+  const { password } = req.body;
+  if (!password || password !== DASHBOARD_PASSWORD) {
+    return res.status(401).json({ error: "Invalid password" });
+  }
+  const token = getDashboardToken();
+  res.setHeader(
+    "Set-Cookie",
+    `db_session=${token}; Path=/prioritybooking; HttpOnly; SameSite=Strict; Max-Age=86400`,
+  );
+  res.json({ ok: true });
+});
+
+// Logout
+app.get("/prioritybooking/dashboard/logout", (req, res) => {
+  res.setHeader(
+    "Set-Cookie",
+    "db_session=; Path=/prioritybooking; HttpOnly; Max-Age=0",
+  );
+  res.redirect("/prioritybooking/dashboard");
+});
+
+// API: leads with T&C link
+app.get(
+  "/prioritybooking/api/dashboard/leads",
+  requireDashboardAuth,
+  async (req, res) => {
+    try {
+      const leads = await odooExecute(
+        "crm.lead",
+        "search_read",
+        [["x_studio_tc_link", "!=", false]],
+        {
+          fields: [
+            "id",
+            "partner_name",
+            "contact_name",
+            "stage_id",
+            "x_studio_tc_link",
+            "x_studio_tc_agreed",
+            "x_studio_tc_agreed_datetime",
+            "x_studio_paymongo_checkout_url",
+            "x_studio_priority_booking_paid",
+          ],
+          order: "id desc",
+          limit: 500,
+        },
+      );
+      res.json({ leads: leads.filter((l) => l.x_studio_tc_link) });
+    } catch (err) {
+      console.error("Dashboard leads error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  },
+);
+
+// API: generate booking URLs and save to Odoo
+app.post(
+  "/prioritybooking/api/dashboard/generate-urls",
+  requireDashboardAuth,
+  async (req, res) => {
+    const { lead_ids } = req.body;
+    if (!Array.isArray(lead_ids) || lead_ids.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "lead_ids must be a non-empty array" });
+    }
+    const results = [];
+    for (const raw of lead_ids) {
+      const id = parseInt(raw, 10);
+      if (isNaN(id)) {
+        results.push({ id: raw, error: "Invalid ID" });
+        continue;
+      }
+      const url = `https://solvivaenergy.com/prioritybooking?lead_id=${id}&token=${generateToken(id)}`;
+      try {
+        const found = await odooExecute(
+          "crm.lead",
+          "search_read",
+          [["id", "=", id]],
+          {
+            fields: [
+              "id",
+              "partner_name",
+              "contact_name",
+              "x_studio_tc_agreed",
+              "x_studio_priority_booking_paid",
+            ],
+            limit: 1,
+          },
+        );
+        if (!found || found.length === 0) {
+          results.push({ id, url, error: "Lead not found" });
+          continue;
+        }
+        const lead = found[0];
+        await odooExecute("crm.lead", "write", [
+          [id],
+          { x_studio_tc_link: url },
+        ]);
+        results.push({
+          id,
+          name: lead.partner_name || lead.contact_name || "",
+          url,
+          saved: true,
+          tc_agreed: lead.x_studio_tc_agreed,
+          paid: lead.x_studio_priority_booking_paid,
+        });
+      } catch (err) {
+        results.push({ id, url, error: err.message, saved: false });
+      }
+    }
+    res.json({ results });
+  },
+);
 
 // Health check
 app.get("/prioritybooking/health", (req, res) => res.json({ status: "ok" }));

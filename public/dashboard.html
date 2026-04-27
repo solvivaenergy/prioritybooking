@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Priority Booking Dashboard — Solviva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green:       #1f522b;
+      --lime:        #d2ff1e;
+      --blue:        #006ac6;
+      --white:       #ffffff;
+      --bg:          #f0f2f5;
+      --card:        #ffffff;
+      --border:      #e3e8ef;
+      --text:        #1a1f2b;
+      --muted:       #6b7280;
+      --ok-bg:       #dcfce7;
+      --ok-text:     #166534;
+      --warn-bg:     #fef9c3;
+      --warn-text:   #854d0e;
+      --no-bg:       #f1f5f9;
+      --no-text:     #64748b;
+      --err-bg:      #fee2e2;
+      --err-text:    #991b1b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Login ── */
+    #login-view {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 2.5rem;
+      width: 360px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .login-logo .brand-name {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 1px;
+    }
+    .login-logo .brand-sub {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-top: 0.2rem;
+    }
+    .field-label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
+    .text-input {
+      width: 100%;
+      padding: 0.6rem 0.875rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .text-input:focus { border-color: var(--green); }
+    .login-error {
+      color: #dc2626;
+      font-size: 0.8125rem;
+      margin-top: 0.625rem;
+      min-height: 1.25rem;
+      text-align: center;
+    }
+    .btn-login {
+      width: 100%;
+      margin-top: 1.25rem;
+      padding: 0.75rem;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-login:hover { opacity: 0.9; }
+    .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Header ── */
+    header {
+      background: var(--green);
+      height: 54px;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .hdr-brand {
+      display: flex;
+      align-items: baseline;
+      gap: 0.625rem;
+    }
+    .hdr-name  { color: var(--lime); font-weight: 700; font-size: 1.125rem; letter-spacing: 0.5px; }
+    .hdr-page  { color: rgba(255,255,255,0.65); font-size: 0.8125rem; }
+    .hdr-logout {
+      color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 0.3rem 0.875rem;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .hdr-logout:hover { background: rgba(255,255,255,0.2); }
+
+    /* ── Main ── */
+    main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .card-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 1rem;
+    }
+
+    /* ── Generator ── */
+    .gen-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    .gen-textarea {
+      flex: 1;
+      min-height: 2.6rem;
+      max-height: 7rem;
+      padding: 0.6rem 0.875rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.9375rem;
+      font-family: inherit;
+      outline: none;
+      resize: none;
+      overflow-y: auto;
+      transition: border-color 0.2s;
+    }
+    .gen-textarea:focus { border-color: var(--green); }
+    .btn {
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      white-space: nowrap;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-primary { background: var(--green); color: var(--white); }
+    .btn-primary:hover:not(:disabled) { opacity: 0.88; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1.5px solid var(--border);
+    }
+    .btn-ghost:hover:not(:disabled) { border-color: #adb5bd; color: var(--text); }
+
+    /* Gen results */
+    #gen-results { margin-top: 1.125rem; display: none; }
+    .gen-results-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.625rem;
+    }
+    .gen-results-head span { font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
+    .mini-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    .mini-table th {
+      background: #f8fafc;
+      text-align: left;
+      padding: 0.45rem 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .mini-table td {
+      padding: 0.45rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .mini-table tr:last-child td { border-bottom: none; }
+    .url-mono {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--blue);
+      word-break: break-all;
+    }
+
+    /* ── Table toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      flex: 1;
+      min-width: 180px;
+      max-width: 300px;
+      padding: 0.5rem 0.875rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--green); }
+    .leads-count { font-size: 0.8125rem; color: var(--muted); margin-left: auto; }
+
+    /* ── Leads table ── */
+    .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table.leads-tbl { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    .leads-tbl th {
+      background: var(--green);
+      color: var(--white);
+      text-align: left;
+      padding: 0.6rem 0.875rem;
+      font-weight: 600;
+      white-space: nowrap;
+      font-size: 0.75rem;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .leads-tbl td {
+      padding: 0.6rem 0.875rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .leads-tbl tbody tr:last-child td { border-bottom: none; }
+    .leads-tbl tbody tr:hover td { background: #f8fafc; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+      gap: 0.2rem;
+    }
+    .badge-ok   { background: var(--ok-bg);   color: var(--ok-text); }
+    .badge-no   { background: var(--no-bg);   color: var(--no-text); }
+    .badge-warn { background: var(--warn-bg); color: var(--warn-text); }
+    .badge-err  { background: var(--err-bg);  color: var(--err-text); }
+
+    /* ── Copy button ── */
+    .copy-btn {
+      background: none;
+      border: 1.5px solid var(--border);
+      border-radius: 5px;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.75rem;
+      font-family: inherit;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { border-color: var(--green); color: var(--green); }
+    .copy-btn.copied { border-color: var(--ok-text); color: var(--ok-text); background: var(--ok-bg); }
+
+    /* ── State rows ── */
+    .state-cell {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--green);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.375rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .id-chip { font-family: monospace; color: var(--muted); font-size: 0.8125rem; }
+
+    a.pm-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: var(--ok-text);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      background: var(--ok-bg);
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+    }
+    a.pm-link:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+      main { padding: 1rem; }
+      .gen-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══════════════════════════════════════════════════════════ -->
+<div id="login-view">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="brand-name">SOLVIVA</div>
+      <div class="brand-sub">Priority Booking Dashboard</div>
+    </div>
+    <label class="field-label" for="login-pw">Password</label>
+    <input type="password" id="login-pw" class="text-input"
+           placeholder="Enter dashboard password"
+           autocomplete="current-password" />
+    <div class="login-error" id="login-err"></div>
+    <button class="btn-login" id="login-btn">Sign In</button>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══════════════════════════════════════════════════════ -->
+<div id="dashboard-view" hidden>
+  <header>
+    <div class="hdr-brand">
+      <span class="hdr-name">SOLVIVA</span>
+      <span class="hdr-page">Priority Booking Dashboard</span>
+    </div>
+    <a href="/prioritybooking/dashboard/logout" class="hdr-logout">Sign out</a>
+  </header>
+
+  <main>
+
+    <!-- URL Generator -->
+    <div class="card">
+      <div class="card-title">🔗 Generate Booking URLs</div>
+      <div class="gen-row">
+        <textarea id="gen-ids" class="gen-textarea" rows="1"
+          placeholder="Enter Lead IDs separated by commas — e.g. 1234, 5678, 9012"></textarea>
+        <button class="btn btn-primary" id="gen-btn">Generate &amp; Save</button>
+      </div>
+      <div id="gen-results">
+        <div class="gen-results-head">
+          <span id="gen-summary"></span>
+          <button class="btn btn-ghost" id="copy-all-btn" style="font-size:0.75rem;padding:0.25rem 0.75rem;">Copy All URLs</button>
+        </div>
+        <table class="mini-table">
+          <thead>
+            <tr>
+              <th>Lead ID</th>
+              <th>Client Name</th>
+              <th>Booking URL</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="gen-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Leads Table -->
+    <div class="card">
+      <div class="card-title">📋 Leads with Priority Booking Links</div>
+      <div class="toolbar">
+        <input type="search" id="search" class="search-input"
+               placeholder="Search name, ID, stage…" />
+        <button class="btn btn-ghost" id="refresh-btn" style="padding:0.5rem 1rem;">↻ Refresh</button>
+        <span class="leads-count" id="leads-count"></span>
+      </div>
+      <div class="table-wrap">
+        <table class="leads-tbl">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Client Name</th>
+              <th>Stage</th>
+              <th>T&amp;C Link</th>
+              <th>T&amp;C Agreed</th>
+              <th>Agreed Date &amp; Time</th>
+              <th>Payment Link</th>
+              <th>Paid</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody">
+            <tr><td class="state-cell" colspan="8">
+              <span class="spinner"></span> Loading…
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+"use strict";
+
+/* ══ Helpers ══════════════════════════════════════════════════════════ */
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function $(id) { return document.getElementById(id); }
+
+function badge(yes, yesLabel, noLabel, warnLabel) {
+  if (yes === true)  return `<span class="badge badge-ok">✓ ${esc(yesLabel)}</span>`;
+  if (yes === false) return `<span class="badge badge-no">✗ ${esc(noLabel)}</span>`;
+  return `<span class="badge badge-warn">${esc(warnLabel || "—")}</span>`;
+}
+
+function fmtDate(dt) {
+  if (!dt) return "—";
+  try {
+    const d = new Date(dt.replace(" ", "T") + "Z");
+    return d.toLocaleString("en-PH", {
+      timeZone: "Asia/Manila",
+      month: "short", day: "numeric", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  } catch { return dt; }
+}
+
+function shortUrl(url) {
+  try {
+    const u = new URL(url);
+    return `…?lead_id=${u.searchParams.get("lead_id")}&token=…`;
+  } catch { return url.slice(0, 40) + "…"; }
+}
+
+/* ══ Copy ══════════════════════════════════════════════════════════════ */
+
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest(".copy-btn[data-copy]");
+  if (!btn) return;
+  const text = btn.dataset.copy;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = "Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+  }).catch(() => {
+    /* silent fail */
+  });
+});
+
+/* ══ Auth ══════════════════════════════════════════════════════════════ */
+
+async function init() {
+  const r = await fetch("/prioritybooking/api/dashboard/leads").catch(() => ({ status: 500 }));
+  if (r.status === 401) {
+    showLogin();
+  } else {
+    showDashboard();
+    if (r.ok) {
+      const d = await r.json();
+      leadsData = d.leads || [];
+      renderLeads(leadsData);
+    } else {
+      showTableError("Failed to load leads.");
+    }
+  }
+}
+
+function showLogin() {
+  $("login-view").removeAttribute("hidden");
+  $("dashboard-view").setAttribute("hidden", "");
+}
+
+function showDashboard() {
+  $("login-view").setAttribute("hidden", "");
+  $("dashboard-view").removeAttribute("hidden");
+}
+
+/* Login */
+$("login-btn").addEventListener("click", doLogin);
+$("login-pw").addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+
+async function doLogin() {
+  const pw = $("login-pw").value;
+  $("login-err").textContent = "";
+  if (!pw) { $("login-err").textContent = "Please enter password."; return; }
+  const btn = $("login-btn");
+  btn.disabled = true; btn.textContent = "Signing in…";
+  try {
+    const r = await fetch("/prioritybooking/dashboard/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pw }),
+    });
+    const d = await r.json();
+    if (r.ok) {
+      showDashboard();
+      loadLeads();
+    } else {
+      $("login-err").textContent = d.error || "Invalid password.";
+    }
+  } catch {
+    $("login-err").textContent = "Connection error. Try again.";
+  } finally {
+    btn.disabled = false; btn.textContent = "Sign In";
+  }
+}
+
+/* ══ Leads Table ═══════════════════════════════════════════════════════ */
+
+let leadsData = [];
+
+async function loadLeads() {
+  $("leads-tbody").innerHTML = `<tr><td class="state-cell" colspan="8"><span class="spinner"></span> Loading…</td></tr>`;
+  $("leads-count").textContent = "";
+  try {
+    const r = await fetch("/prioritybooking/api/dashboard/leads");
+    if (r.status === 401) { showLogin(); return; }
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Server error");
+    leadsData = d.leads || [];
+    renderLeads(leadsData);
+  } catch (err) {
+    showTableError(err.message);
+  }
+}
+
+function showTableError(msg) {
+  $("leads-tbody").innerHTML = `<tr><td class="state-cell" colspan="8">
+    ⚠ ${esc(msg)} &nbsp; <button class="btn btn-ghost" onclick="loadLeads()" style="font-size:0.8125rem;padding:0.3rem 0.75rem;">Retry</button>
+  </td></tr>`;
+}
+
+function renderLeads(leads) {
+  $("leads-count").textContent = `${leads.length} lead${leads.length !== 1 ? "s" : ""}`;
+  if (leads.length === 0) {
+    $("leads-tbody").innerHTML = `<tr><td class="state-cell" colspan="8">No leads found with T&amp;C links.</td></tr>`;
+    return;
+  }
+  $("leads-tbody").innerHTML = leads.map((l) => {
+    const name  = l.partner_name || l.contact_name || "—";
+    const stage = Array.isArray(l.stage_id) ? l.stage_id[1] : "—";
+    const url   = l.x_studio_tc_link || "";
+    const pmUrl = l.x_studio_paymongo_checkout_url || "";
+
+    const linkCell = url
+      ? `<span class="url-mono" title="${esc(url)}">${esc(shortUrl(url))}</span>
+         &nbsp;<button class="copy-btn" data-copy="${esc(url)}">Copy</button>`
+      : `<span style="color:var(--muted)">—</span>`;
+
+    const pmCell = pmUrl
+      ? `<a href="${esc(pmUrl)}" target="_blank" rel="noopener" class="pm-link">✓ Link ↗</a>`
+      : `<span class="badge badge-no">✗ None</span>`;
+
+    return `<tr data-search="${esc((l.id + " " + name + " " + stage).toLowerCase())}">
+      <td><span class="id-chip">${l.id}</span></td>
+      <td>${esc(name)}</td>
+      <td>${esc(stage)}</td>
+      <td style="white-space:nowrap">${linkCell}</td>
+      <td>${badge(l.x_studio_tc_agreed, "Agreed", "Pending")}</td>
+      <td style="white-space:nowrap;font-size:0.8125rem;">${fmtDate(l.x_studio_tc_agreed_datetime)}</td>
+      <td>${pmCell}</td>
+      <td>${badge(l.x_studio_priority_booking_paid, "Paid", "Unpaid")}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* Search */
+$("search").addEventListener("input", function () {
+  const q = this.value.toLowerCase().trim();
+  if (!q) { renderLeads(leadsData); return; }
+  renderLeads(leadsData.filter((l) => {
+    const name  = (l.partner_name || l.contact_name || "").toLowerCase();
+    const stage = (Array.isArray(l.stage_id) ? l.stage_id[1] : "").toLowerCase();
+    return String(l.id).includes(q) || name.includes(q) || stage.includes(q);
+  }));
+});
+
+/* Refresh */
+$("refresh-btn").addEventListener("click", loadLeads);
+
+/* ══ URL Generator ═════════════════════════════════════════════════════ */
+
+$("gen-btn").addEventListener("click", generateUrls);
+$("gen-ids").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); generateUrls(); }
+});
+
+let lastGenUrls = [];
+
+async function generateUrls() {
+  const raw = $("gen-ids").value.trim();
+  if (!raw) return;
+  const lead_ids = raw.split(/[\s,]+/).map((s) => s.trim()).filter(Boolean);
+  if (lead_ids.length === 0) return;
+
+  const btn = $("gen-btn");
+  btn.disabled = true; btn.textContent = "Generating…";
+
+  try {
+    const r = await fetch("/prioritybooking/api/dashboard/generate-urls", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lead_ids }),
+    });
+    if (r.status === 401) { showLogin(); return; }
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Server error");
+
+    const results = d.results || [];
+    lastGenUrls = results.filter((x) => x.url && !x.error).map((x) => x.url);
+
+    $("gen-results").style.display = "block";
+    $("gen-summary").textContent =
+      `${results.filter((x) => x.saved).length} of ${results.length} saved to Odoo`;
+
+    $("gen-tbody").innerHTML = results.map((item) => {
+      const statusHtml = item.error
+        ? `<span class="badge badge-err">✗ ${esc(item.error)}</span>`
+        : `<span class="badge badge-ok">✓ Saved</span>`;
+
+      const urlHtml = item.url
+        ? `<span class="url-mono">${esc(item.url)}</span>
+           &nbsp;<button class="copy-btn" data-copy="${esc(item.url)}">Copy</button>`
+        : "—";
+
+      return `<tr>
+        <td><span class="id-chip">${esc(String(item.id))}</span></td>
+        <td>${esc(item.name || "—")}</td>
+        <td style="word-break:break-all">${urlHtml}</td>
+        <td>${statusHtml}</td>
+      </tr>`;
+    }).join("");
+
+    /* Reload table to reflect newly saved links */
+    loadLeads();
+
+  } catch (err) {
+    alert("Failed to generate URLs: " + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Generate & Save";
+  }
+}
+
+$("copy-all-btn").addEventListener("click", () => {
+  if (lastGenUrls.length === 0) return;
+  navigator.clipboard.writeText(lastGenUrls.join("\n")).then(() => {
+    const b = $("copy-all-btn");
+    b.textContent = "Copied!";
+    setTimeout(() => { b.textContent = "Copy All URLs"; }, 1500);
+  });
+});
+
+/* ══ Boot ══════════════════════════════════════════════════════════════ */
+init();
+</script>
+</body>
+</html>
