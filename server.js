@@ -614,7 +614,7 @@ app.post(
       const leads = await odooExecute(
         "crm.lead",
         "search_read",
-        [["x_studio_tc_link", "!=", false]],
+        [[["x_studio_tc_link", "!=", false]]],
         { fields: ["id"], limit: 500 },
       );
       const ids = leads.map((l) => l.id);
