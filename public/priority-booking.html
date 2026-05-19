@@ -332,7 +332,7 @@
 
     <!-- Amount card -->
     <div class="amount-card">
-      <div class="amount">₱5,000.00</div>
+      <div class="amount">₱1,000.00</div>
       <div class="label">Priority booking fee</div>
       <div class="sub">This amount will be deducted from your final solar bill</div>
     </div>
@@ -343,7 +343,7 @@
       <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1rem;">
         <div style="display:flex;gap:1rem;align-items:center;">
           <span style="flex-shrink:0;width:12px;height:12px;border-radius:50%;background:#50890a;display:inline-block;"></span>
-          <p style="font-size:16px;line-height:28px;color:#000;margin:0;">Your &#8369;5,000 is <strong>non-refundable</strong> if you change your mind or cancel.</p>
+          <p style="font-size:16px;line-height:28px;color:#000;margin:0;">Your &#8369;1,000 is <strong>non-refundable</strong> if you change your mind or cancel.</p>
         </div>
         <div style="display:flex;gap:1rem;align-items:flex-start;">
           <span style="flex-shrink:0;width:12px;height:12px;border-radius:50%;background:#50890a;display:inline-block;margin-top:8px;"></span>
@@ -351,7 +351,7 @@
         </div>
         <div style="display:flex;gap:1rem;align-items:flex-start;">
           <span style="flex-shrink:0;width:12px;height:12px;border-radius:50%;background:#50890a;display:inline-block;margin-top:8px;"></span>
-          <p style="font-size:16px;line-height:28px;color:#000;margin:0;">Your &#8369;5,000 is <strong>fully credited</strong> to your final system cost when you proceed with installation.</p>
+          <p style="font-size:16px;line-height:28px;color:#000;margin:0;">Your &#8369;1,000 is <strong>fully credited</strong> to your final system cost when you proceed with installation.</p>
         </div>
       </div>
       <p style="font-size:16px;line-height:28px;color:#000;font-style:italic;margin:0;">Please read the full terms and conditions below before proceeding.</p>
@@ -366,7 +366,7 @@
         <p>The Booking Fee is a purely voluntary arrangement whereby the Client pays the amount stipulated in Section 2 for the sole purpose of securing a priority site assessment schedule with Solviva. The Booking Fee shall be subject to these Terms and Conditions.</p>
 
         <h3>2. Amount</h3>
-        <p>The Client shall, upon execution of the Terms, pay to Solviva the sum of Five Thousand Pesos (&#8369;5,000.00) as the Booking Fee. This Booking Fee shall be inclusive of Value Added Tax (VAT), withholding tax and all other applicable taxes.</p>
+        <p>The Client shall, upon execution of the Terms, pay to Solviva the sum of One Thousand Pesos (&#8369;1,000.00) as the Booking Fee. This Booking Fee shall be inclusive of Value Added Tax (VAT), withholding tax and all other applicable taxes.</p>
 
         <h3>3. Application of the Booking Fee</h3>
         <p>3.1 The Booking Fee shall be credited toward the final Contract Price should the nominated Project Site be found eligible for a rooftop solar PV system, and the Client proceeds with the execution of the Project Documents (as defined below) with Solviva.</p>
@@ -508,8 +508,9 @@
   <script>
     // ── Get URL params ──
     const params = new URLSearchParams(window.location.search);
-    const leadId = params.get('lead_id');
-    const token  = params.get('token');
+    const leadId  = params.get('lead_id');
+    const token   = params.get('token');
+    const issued  = params.get('issued');
 
     // ── Date default ──
     const dateInput = document.getElementById('date');
@@ -573,6 +574,7 @@
           body: JSON.stringify({
             lead_id: leadId,
             token: token,
+            issued: issued,
             name,
             address,
             date,

@@ -28,20 +28,26 @@ const {
   ODOO_TEMPLATE_CLIENT,
   ODOO_TEMPLATE_SALESREP,
   DASHBOARD_PASSWORD,
+  LINK_EXPIRY_DAYS = "7",
 } = process.env;
 
 // ─── Helpers ──────────────────────────────────────────────
 
-function generateToken(leadId) {
+function generateToken(leadId, issuedAt) {
   return crypto
     .createHmac("sha256", HMAC_SECRET)
-    .update(String(leadId))
+    .update(`${leadId}:${issuedAt}`)
     .digest("hex");
 }
 
-function verifyToken(leadId, token) {
-  const expected = generateToken(leadId);
+function verifyToken(leadId, token, issuedAt) {
+  const expected = generateToken(leadId, issuedAt);
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(token));
+}
+
+function checkLinkExpiry(issuedAt) {
+  const expirySeconds = parseInt(LINK_EXPIRY_DAYS, 10) * 24 * 60 * 60;
+  return Math.floor(Date.now() / 1000) - issuedAt <= expirySeconds;
 }
 
 // Odoo JSON-RPC helper
@@ -88,15 +94,29 @@ async function odooExecute(model, method, args, kwargs = {}) {
 
 // Serve T&C page — validates lead_id + token
 app.get("/prioritybooking", async (req, res) => {
-  const { lead_id, token } = req.query;
+  const { lead_id, token, issued } = req.query;
 
-  if (!lead_id || !token) {
+  if (!lead_id || !token || !issued) {
     return res.status(400).send("Invalid link. Missing parameters.");
+  }
+
+  const issuedAt = parseInt(issued, 10);
+  if (isNaN(issuedAt)) {
+    return res.status(400).send("Invalid link.");
+  }
+
+  // Check expiry before anything else
+  if (!checkLinkExpiry(issuedAt)) {
+    return res
+      .status(410)
+      .send(
+        "This link has expired. Please contact your Solviva sales representative to request a new one.",
+      );
   }
 
   // Verify HMAC token
   try {
-    if (!verifyToken(lead_id, token)) {
+    if (!verifyToken(lead_id, token, issuedAt)) {
       return res.status(403).send("Invalid or tampered link.");
     }
   } catch {
@@ -134,15 +154,37 @@ app.get("/prioritybooking", async (req, res) => {
 
 // Handle T&C form submission
 app.post("/prioritybooking/api/submit-tc", async (req, res) => {
-  const { lead_id, token, name, address, date, signature } = req.body;
+  const { lead_id, token, issued, name, address, date, signature } = req.body;
 
   // ── 1. Validate inputs ──
-  if (!lead_id || !token || !name || !address || !date || !signature) {
+  if (
+    !lead_id ||
+    !token ||
+    !issued ||
+    !name ||
+    !address ||
+    !date ||
+    !signature
+  ) {
     return res.status(400).json({ error: "All fields are required." });
   }
 
+  const issuedAt = parseInt(issued, 10);
+  if (isNaN(issuedAt)) {
+    return res.status(400).json({ error: "Invalid link." });
+  }
+
+  if (!checkLinkExpiry(issuedAt)) {
+    return res
+      .status(410)
+      .json({
+        error:
+          "This link has expired. Please contact your Solviva sales representative to request a new one.",
+      });
+  }
+
   try {
-    if (!verifyToken(lead_id, token)) {
+    if (!verifyToken(lead_id, token, issuedAt)) {
       return res.status(403).json({ error: "Invalid or tampered link." });
     }
   } catch {
@@ -180,7 +222,7 @@ app.post("/prioritybooking/api/submit-tc", async (req, res) => {
       {
         data: {
           attributes: {
-            amount: 500000, // ₱5,000 in centavos
+            amount: 100000, // ₱1,000 in centavos
             description: `Solviva Energy - Priority Booking Fee for ${name}`,
             remarks: `Odoo Lead ID: ${lead_id}`,
           },
@@ -321,7 +363,7 @@ app.post("/prioritybooking/webhook/paymongo", async (req, res) => {
       [lead.id],
       {
         x_studio_priority_booking_paid: true,
-        x_studio_priority_booking_amount: 5000,
+        x_studio_priority_booking_amount: 1000,
       },
     ]);
 
@@ -475,7 +517,8 @@ app.post(
         results.push({ id: raw, error: "Invalid ID" });
         continue;
       }
-      const url = `https://solvivaenergy.com/prioritybooking?lead_id=${id}&token=${generateToken(id)}`;
+      const issuedAt = Math.floor(Date.now() / 1000);
+      const url = `https://solvivaenergy.com/prioritybooking?lead_id=${id}&issued=${issuedAt}&token=${generateToken(id, issuedAt)}`;
       try {
         const found = await odooExecute(
           "crm.lead",
@@ -557,6 +600,45 @@ app.post(
       });
     } catch (err) {
       console.error("Reset lead error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  },
+);
+
+// API: bulk-reset all leads that have a generated T&C link
+app.post(
+  "/prioritybooking/api/dashboard/reset-all-leads",
+  requireDashboardAuth,
+  async (req, res) => {
+    try {
+      const leads = await odooExecute(
+        "crm.lead",
+        "search_read",
+        [["x_studio_tc_link", "!=", false]],
+        { fields: ["id"], limit: 500 },
+      );
+      const ids = leads.map((l) => l.id);
+      if (ids.length === 0) return res.json({ ok: true, reset: 0 });
+      await odooExecute("crm.lead", "write", [
+        ids,
+        {
+          x_studio_tc_link: false,
+          x_studio_tc_agreed: false,
+          x_studio_tc_name: false,
+          x_studio_tc_address: false,
+          x_studio_tc_date: false,
+          x_studio_tc_signature: false,
+          x_studio_tc_agreed_datetime: false,
+          x_studio_paymongo_link_id: false,
+          x_studio_paymongo_ref: false,
+          x_studio_paymongo_checkout_url: false,
+          x_studio_priority_booking_paid: false,
+          x_studio_priority_booking_amount: false,
+        },
+      ]);
+      res.json({ ok: true, reset: ids.length });
+    } catch (err) {
+      console.error("Reset all leads error:", err.message);
       res.status(500).json({ error: err.message });
     }
   },

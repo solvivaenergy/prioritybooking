@@ -414,6 +414,7 @@
         <input type="search" id="search" class="search-input"
                placeholder="Search name, ID, stage…" />
         <button class="btn btn-ghost" id="refresh-btn" style="padding:0.5rem 1rem;">↻ Refresh</button>
+        <button class="btn" id="reset-all-btn" style="padding:0.5rem 1rem;background:var(--err-text);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;margin-left:auto;">⚠ Reset All</button>
         <span class="leads-count" id="leads-count"></span>
       </div>
       <div class="table-wrap">
@@ -450,6 +451,17 @@
     <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
       <button class="btn btn-ghost" id="reset-cancel-btn" style="padding:0.5rem 1.25rem;">Cancel</button>
       <button class="btn" id="reset-confirm-btn" style="padding:0.5rem 1.25rem;background:var(--err-text);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Reset</button>
+    </div>
+  </div>
+</div>
+<!-- ══ RESET ALL CONFIRM MODAL ════════════════════════════════════════ -->
+<div id="reset-all-modal" hidden style="position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:999">
+  <div style="background:#fff;border-radius:12px;padding:2rem;width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.18);">
+    <div style="font-weight:700;font-size:1rem;margin-bottom:0.5rem;color:var(--err-text)">⚠ Reset ALL Leads?</div>
+    <div style="color:var(--muted);font-size:0.875rem;margin-bottom:1.5rem;">This will clear <strong>all priority booking fields</strong> for <strong>every lead</strong> that has a generated T&amp;C link. This cannot be undone.</div>
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+      <button class="btn btn-ghost" id="reset-all-cancel-btn" style="padding:0.5rem 1.25rem;">Cancel</button>
+      <button class="btn" id="reset-all-confirm-btn" style="padding:0.5rem 1.25rem;background:var(--err-text);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Reset All</button>
     </div>
   </div>
 </div>
@@ -683,6 +695,35 @@ $('reset-confirm-btn').addEventListener('click', async () => {
     loadLeads();
   } catch (err) {
     alert('Reset failed: ' + err.message);
+  }
+});
+/* ══ Reset All Leads ══════════════════════════════════════════════════ */
+
+$('reset-all-btn').addEventListener('click', () => {
+  $('reset-all-modal').removeAttribute('hidden');
+});
+
+$('reset-all-cancel-btn').addEventListener('click', () => {
+  $('reset-all-modal').setAttribute('hidden', '');
+});
+
+$('reset-all-confirm-btn').addEventListener('click', async () => {
+  $('reset-all-modal').setAttribute('hidden', '');
+  const btn = $('reset-all-confirm-btn');
+  btn.disabled = true;
+  try {
+    const r = await apiFetch('/prioritybooking/api/dashboard/reset-all-leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Server error');
+    alert(`Done. ${d.reset} lead(s) have been reset.`);
+    loadLeads();
+  } catch (err) {
+    alert('Reset all failed: ' + err.message);
+  } finally {
+    btn.disabled = false;
   }
 });
 /* ══ URL Generator ═════════════════════════════════════════════════════ */
